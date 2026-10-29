@@ -12,6 +12,11 @@ body {
   gap: var(--perron-space-500);
 }
 
+/* Grid items would otherwise grow to their widest content, such as the history table. */
+.page > * {
+  min-inline-size: 0;
+}
+
 .top {
   display: flex;
   flex-wrap: wrap;
@@ -53,35 +58,80 @@ body {
   min-width: 0;
 }
 
+/* The table in the middle of the page, under the round's name. */
+.arena {
+  display: grid;
+  justify-items: center;
+  gap: var(--perron-space-200);
+}
+
 .round-head {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: baseline;
   gap: var(--perron-space-200);
+  text-align: center;
 }
 
 .round-head h2 {
   margin: 0;
 }
 
+/*
+ * A half-moon table, as in a casino: the dealer stands at the straight edge, Jev sits at the
+ * curve. Two to one wide, it grows taller when split hands need the room, and the padded rail
+ * runs round the curve.
+ */
 .felt {
-  display: grid;
-  gap: var(--perron-space-500);
-  padding: var(--perron-space-400);
-  border-radius: var(--perron-radius-xl);
+  --card-w: 3.5rem;
+  --card-h: 5rem;
+  position: relative;
+  inline-size: min(100%, 48rem);
+  aspect-ratio: 2 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--perron-space-200);
+  padding: var(--perron-space-300) 12% 9%;
+  background: var(--perron-color-surface-inset);
+  border: var(--perron-space-150) solid var(--perron-color-surface-raised);
+  border-block-start: var(--perron-border-width-050) solid var(--perron-color-border-strong);
+  border-radius: 0 0 50% 50% / 0 0 100% 100%;
+  box-shadow: var(--perron-shadow-panel);
+}
+
+/* Split hands get smaller cards so they still fit inside the curve. */
+.felt[data-hands="3"],
+.felt[data-hands="4"] {
+  --card-w: 2.75rem;
+  --card-h: 4rem;
+}
+
+.felt-print {
+  inline-size: 70%;
+  flex: none;
+  fill: var(--perron-color-text-tertiary);
+  font: var(--perron-typography-overline);
+  letter-spacing: var(--perron-typography-overline-tracking);
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 .hands {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--perron-space-400);
+  justify-content: center;
+  gap: var(--perron-space-200);
 }
 
 .seat {
+  position: relative;
   display: grid;
-  gap: var(--perron-space-150);
-  justify-items: start;
-  padding: var(--perron-space-200);
+  gap: var(--perron-space-100);
+  justify-items: center;
+  padding: var(--perron-space-150);
   border: var(--perron-border-width-050) solid transparent;
   border-radius: var(--perron-radius-lg);
 }
@@ -92,14 +142,14 @@ body {
 
 .cards {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--perron-space-100);
-  min-height: 5rem;
+  min-block-size: var(--card-h);
 }
 
 .card {
-  inline-size: 3.5rem;
-  block-size: 5rem;
+  inline-size: var(--card-w);
+  block-size: var(--card-h);
   display: grid;
   grid-template-rows: auto 1fr;
   padding: var(--perron-space-100);
@@ -118,12 +168,12 @@ body {
 
 .card-rank {
   font-weight: 700;
-  font-size: 1.125rem;
+  font-size: calc(var(--card-w) * 0.32);
   line-height: 1;
 }
 
 .card-suit {
-  font-size: 1.75rem;
+  font-size: calc(var(--card-w) * 0.5);
   place-self: center;
 }
 
@@ -159,9 +209,31 @@ body {
 
 .hand-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--perron-space-200);
-  align-items: center;
+  gap: var(--perron-space-150);
+  align-items: baseline;
+}
+
+/* On a phone the table keeps its curve but stands taller than half its width. */
+@media (max-width: 599px) {
+  .felt {
+    --card-w: 2.75rem;
+    --card-h: 4rem;
+    aspect-ratio: auto;
+    min-block-size: 20rem;
+    padding-inline: 8%;
+    padding-block-end: 14%;
+    border-radius: 0 0 50% 50% / 0 0 45% 45%;
+  }
+
+  .felt[data-hands="3"],
+  .felt[data-hands="4"] {
+    --card-w: 2.25rem;
+    --card-h: 3.25rem;
+  }
+
+  .felt-print {
+    inline-size: 100%;
+  }
 }
 
 .decision {
