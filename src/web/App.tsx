@@ -1,4 +1,4 @@
-import { Button, FactList, Meter, Section, Stat, Surface, Tag, Text } from "@mylder/perron";
+import { Button, FactList, Meter, Section, Stat, Tag, Text } from "@mylder/perron";
 import pauseIcon from "@mylder/perron/icons/pause.svg?raw";
 import playIcon from "@mylder/perron/icons/play.svg?raw";
 import { useState } from "react";
@@ -46,31 +46,43 @@ const STATUS: Record<Status, { label: string; color: "success" | "neutral" | "in
 
 const signed = (amount: number) => `${amount > 0 ? "+" : ""}${money(amount)}`;
 
+/** The words printed on the felt, along an arc under the dealer as on a real table. */
+function FeltPrint() {
+  return (
+    <svg className="felt-print" viewBox="0 0 400 56" aria-hidden="true">
+      <path id="felt-arc" d="M 20 14 Q 200 70 380 14" fill="none" />
+      <text>
+        <textPath href="#felt-arc" startOffset="50%" textAnchor="middle">
+          Blackjack pays 3 to 2 · Dealer stands on soft 17
+        </textPath>
+      </text>
+    </svg>
+  );
+}
+
 function TableView({ table }: { table: Table }) {
   const dealerCards: (Card | null)[] = table.holeHidden && table.dealer.length === 1 ? [table.dealer[0]!, null] : table.dealer;
   const dealerTotal = table.holeHidden ? (table.dealer[0] ? formatTotal(table.dealer) : null) : formatTotal(table.dealer);
   return (
-    <Surface variant="inset" className="felt">
-      <div className="seat">
-        <Text variant="overline" emphasis="secondary">
-          Dealer
-        </Text>
+    <div className="felt" data-hands={table.hands.length || 1}>
+      <div className="seat seat-dealer">
         <div className="cards">
           {dealerCards.length ? dealerCards.map((card, i) => <PlayingCard key={i} card={card} />) : <span className="card card-empty" />}
         </div>
-        <Text variant="data" emphasis="secondary">
-          {dealerTotal ?? "—"}
+        <Text variant="overline" emphasis="secondary">
+          Dealer {dealerTotal ? `· ${dealerTotal}` : ""}
         </Text>
       </div>
+      <FeltPrint />
       <div className="hands">
         {table.hands.length === 0 && (
           <div className="seat">
-            <Text variant="overline" emphasis="secondary">
-              Jev
-            </Text>
             <div className="cards">
               <span className="card card-empty" />
             </div>
+            <Text variant="overline" emphasis="secondary">
+              Jev
+            </Text>
           </div>
         )}
         {table.hands.map((hand, i) => {
@@ -78,32 +90,32 @@ function TableView({ table }: { table: Table }) {
           const bust = handTotal(hand.cards).total > 21;
           return (
             <div key={i} className="seat" data-active={table.active === i || undefined}>
-              <Text variant="overline" emphasis="secondary">
-                {table.hands.length > 1 ? `Jev, hand ${i + 1}` : "Jev"}
-              </Text>
               <div className="cards">
                 {hand.cards.map((card, j) => (
                   <PlayingCard key={j} card={card} />
                 ))}
               </div>
               <div className="hand-meta">
+                <Text variant="overline" emphasis="secondary">
+                  {table.hands.length > 1 ? `Jev ${i + 1}` : "Jev"}
+                </Text>
                 <Text variant="data" color={bust ? "danger" : "neutral"}>
                   {formatTotal(hand.cards)}
                 </Text>
                 <Text variant="data-sm" emphasis="secondary">
-                  bet {money(hand.bet)}
+                  {money(hand.bet)}
                 </Text>
-                {outcome && (
-                  <Tag color={outcome.color}>
-                    {outcome.label} {signed(hand.net ?? 0)}
-                  </Tag>
-                )}
               </div>
+              {outcome && (
+                <Tag color={outcome.color}>
+                  {outcome.label} {signed(hand.net ?? 0)}
+                </Tag>
+              )}
             </div>
           );
         })}
       </div>
-    </Surface>
+    </div>
   );
 }
 
@@ -274,19 +286,22 @@ export function App() {
         </Text>
       )}
 
+      <div className="arena">
+        <div className="round-head">
+          <Text variant="heading-sm" render={<h2 />}>
+            {round ? `Round ${round.id.toLocaleString("en-US")}` : "Waiting for the first deal"}
+          </Text>
+          {round && (
+            <Text variant="data-sm" emphasis="secondary">
+              move {Math.max(step + 1, 1)} of {round.steps.length}
+            </Text>
+          )}
+        </div>
+        <TableView table={table} />
+      </div>
+
       <main className="layout">
         <div className="main-column">
-          <div className="round-head">
-            <Text variant="heading-sm" render={<h2 />}>
-              {round ? `Round ${round.id.toLocaleString("en-US")}` : "Waiting for the first deal"}
-            </Text>
-            {round && (
-              <Text variant="data-sm" emphasis="secondary">
-                move {Math.max(step + 1, 1)} of {round.steps.length}
-              </Text>
-            )}
-          </div>
-          <TableView table={table} />
           <DecisionView table={table} />
           <Section title="This round">
             <ol className="log">
