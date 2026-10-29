@@ -65,6 +65,30 @@ function FeltPrint() {
   );
 }
 
+/** A key per call, so a new call pops in even when Jev makes the same choice again. */
+function callKey(table: Table): string {
+  const call = table.decision;
+  return call ? `${call.kind}-${call.hand}-${table.hands[call.hand]?.cards.length ?? 0}` : "none";
+}
+
+/** Jev's call on the table, under the hand it's for, until the round settles. */
+function SeatCall({ table, hand }: { table: Table; hand: number }) {
+  const call = table.decision;
+  const shown = call && call.hand === hand && table.net === null;
+  return (
+    <div className="seat-call">
+      {shown && (
+        <span key={callKey(table)} className="pop">
+          <Tag color="info">
+            {call.kind === "insurance" ? "Insurance: " : ""}
+            {call.decision.choice} · {Math.round((call.decision.probabilities[call.decision.choice] ?? 0) * 100)}%
+          </Tag>
+        </span>
+      )}
+    </div>
+  );
+}
+
 function TableView({ table }: { table: Table }) {
   const dealerCards: (Card | null)[] = table.holeHidden && table.dealer.length === 1 ? [table.dealer[0]!, null] : table.dealer;
   const dealerTotal = table.holeHidden ? (table.dealer[0] ? formatTotal(table.dealer) : null) : formatTotal(table.dealer);
@@ -101,6 +125,7 @@ function TableView({ table }: { table: Table }) {
                 —
               </Text>
             </div>
+            <SeatCall table={table} hand={-1} />
           </div>
         )}
         {table.hands.map((hand, i) => {
@@ -124,6 +149,7 @@ function TableView({ table }: { table: Table }) {
                   {money(hand.bet)}
                 </Text>
               </div>
+              <SeatCall table={table} hand={i} />
               {outcome && (
                 <span className="result pop">
                   <Tag color={outcome.color}>
@@ -174,7 +200,7 @@ function DecisionView({ table }: { table: Table }) {
       }
     >
       <div className="decision">
-        <span key={`${call.kind}-${call.hand}-${table.hands[call.hand]?.cards.length ?? 0}`} className="pop">
+        <span key={callKey(table)} className="pop">
           <Text variant="data-xl">{decision.choice}</Text>
         </span>
         <Stat label="Confidence">{decision.confidence.toFixed(2)}</Stat>
@@ -284,7 +310,7 @@ function HistoryView({ history }: { history: HandRecord[] }) {
 
 export function App() {
   const [paused, setPaused] = useState(false);
-  const { status, error, round, table, step, state, history, nextMoveAt, serverNow } = useRound(paused);
+  const { status, error, round, table, state, history, nextMoveAt, serverNow } = useRound(paused);
   const badge = STATUS[status];
 
   return (
@@ -295,8 +321,7 @@ export function App() {
             Black Jev
           </Text>
           <Text emphasis="secondary">
-            Jev, TypeSafe AI's decision model, at a {RULES.decks}-deck Blackjack table. It plays only while someone
-            watches: one move every {round ? round.stepMs / 1000 : 5} seconds.
+            Jev, TypeSafe AI's decision model, at a {RULES.decks}-deck Blackjack table.
           </Text>
         </div>
         <div className="controls">
@@ -327,11 +352,6 @@ export function App() {
           <Text variant="heading-sm" render={<h2 />}>
             {round ? `Round ${round.id.toLocaleString("en-US")}` : "Waiting for the first deal"}
           </Text>
-          {round && (
-            <Text variant="data-sm" emphasis="secondary">
-              move {Math.max(step + 1, 1)} of {round.steps.length}
-            </Text>
-          )}
           <NextMove status={status} nextMoveAt={nextMoveAt} serverNow={serverNow} />
         </div>
         <TableView table={table} />
