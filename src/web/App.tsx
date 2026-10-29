@@ -7,7 +7,7 @@ import type { Outcome } from "../engine/game.js";
 import { money } from "../engine/narrate.js";
 import { RULES } from "../engine/rules.js";
 import type { HandRecord, State } from "../engine/state.js";
-import type { Table } from "./table.js";
+import type { Table } from "./playback.js";
 import { useRound, type Status } from "./useRound.js";
 
 function Icon({ svg }: { svg: string }) {
@@ -139,26 +139,17 @@ function TableView({ table }: { table: Table }) {
   );
 }
 
-/** A small countdown to the next move: the seconds left and a bar that empties until it comes. */
-function NextMove({ status, step, nextMoveAt, serverNow }: { status: Status; step: number; nextMoveAt: number | null; serverNow: number }) {
+/** A small countdown to the next move: the seconds left until it comes. */
+function NextMove({ status, nextMoveAt, serverNow }: { status: Status; nextMoveAt: number | null; serverNow: number }) {
   const left = nextMoveAt === null ? null : Math.max(0, nextMoveAt - serverNow);
-  const running = status === "playing" && left !== null;
   const label =
     status === "paused" || status === "hidden" ? "Paused"
     : status === "playing" && left !== null ? `Next move in ${Math.ceil(left / 1000)} s`
     : "Dealing";
   return (
-    <span className="next-move" role="timer" aria-live="off">
-      <span className="next-move-track" aria-hidden="true">
-        {running && (
-          // A new key per move restarts the bar; it runs for what's left of this move.
-          <span key={step} className="next-move-bar" style={{ animationDuration: `${left}ms` }} />
-        )}
-      </span>
-      <Text variant="data-sm" emphasis="secondary">
-        {label}
-      </Text>
-    </span>
+    <Text variant="data-sm" emphasis="secondary" role="timer" aria-live="off">
+      {label}
+    </Text>
   );
 }
 
@@ -341,7 +332,7 @@ export function App() {
               move {Math.max(step + 1, 1)} of {round.steps.length}
             </Text>
           )}
-          <NextMove status={status} step={step} nextMoveAt={nextMoveAt} serverNow={serverNow} />
+          <NextMove status={status} nextMoveAt={nextMoveAt} serverNow={serverNow} />
         </div>
         <TableView table={table} />
       </div>

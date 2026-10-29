@@ -278,38 +278,6 @@ body {
   animation: pop var(--perron-duration-sheet) var(--perron-easing-standard) both;
 }
 
-/* Time to the next move: a thin bar that empties, beside the seconds left. */
-.next-move {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--perron-space-100);
-}
-
-.next-move-track {
-  inline-size: 3rem;
-  block-size: var(--perron-border-width-050);
-  border-radius: var(--perron-radius-full);
-  background: var(--perron-color-border-subtle);
-  overflow: hidden;
-}
-
-.next-move-bar {
-  display: block;
-  block-size: 100%;
-  background: var(--perron-color-text-secondary);
-  transform-origin: left;
-  animation: drain linear both;
-}
-
-@keyframes drain {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .card,
   .pop,
