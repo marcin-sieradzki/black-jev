@@ -287,6 +287,14 @@ body {
   }
 }
 
+/* Jev's call sits under its hand. The row is always there, so the table keeps its height. */
+.seat-call {
+  display: flex;
+  justify-content: center;
+  min-block-size: 1.5rem;
+  text-transform: capitalize;
+}
+
 .hand-meta {
   display: flex;
   gap: var(--perron-space-150);
