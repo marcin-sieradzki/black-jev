@@ -1,0 +1,225 @@
+/* Black Jev's layout on Perron's tokens. Colours, space, radii and type all come from Perron. */
+
+body {
+  background: var(--perron-color-surface-default);
+}
+
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--perron-space-500) var(--perron-space-200) var(--perron-space-800);
+  display: grid;
+  gap: var(--perron-space-500);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--perron-space-300);
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.top h1 {
+  margin: 0 0 var(--perron-space-100);
+}
+
+.controls {
+  display: flex;
+  gap: var(--perron-space-200);
+  align-items: center;
+}
+
+.icon {
+  display: inline-flex;
+}
+
+.layout {
+  display: grid;
+  gap: var(--perron-space-500);
+}
+
+@media (min-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+    align-items: start;
+  }
+}
+
+.main-column,
+.side-column {
+  display: grid;
+  gap: var(--perron-space-500);
+  min-width: 0;
+}
+
+.round-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--perron-space-200);
+}
+
+.round-head h2 {
+  margin: 0;
+}
+
+.felt {
+  display: grid;
+  gap: var(--perron-space-500);
+  padding: var(--perron-space-400);
+  border-radius: var(--perron-radius-xl);
+}
+
+.hands {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--perron-space-400);
+}
+
+.seat {
+  display: grid;
+  gap: var(--perron-space-150);
+  justify-items: start;
+  padding: var(--perron-space-200);
+  border: var(--perron-border-width-050) solid transparent;
+  border-radius: var(--perron-radius-lg);
+}
+
+.seat[data-active] {
+  border-color: var(--perron-color-border-brand);
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--perron-space-100);
+  min-height: 5rem;
+}
+
+.card {
+  inline-size: 3.5rem;
+  block-size: 5rem;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: var(--perron-space-100);
+  border-radius: var(--perron-radius-md);
+  background: var(--perron-color-surface-raised);
+  border: var(--perron-border-width-025) solid var(--perron-color-border-subtle);
+  box-shadow: var(--perron-shadow-panel);
+  color: var(--perron-color-text-primary);
+  font-family: var(--perron-font-family-data);
+  animation: deal var(--perron-duration-sheet) var(--perron-easing-standard);
+}
+
+.card-red {
+  color: var(--perron-color-text-danger);
+}
+
+.card-rank {
+  font-weight: 700;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.card-suit {
+  font-size: 1.75rem;
+  place-self: center;
+}
+
+/* The back in the brand yellow, striped so it reads as a pattern, not a button. */
+.card-back {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--perron-color-surface-brand) 0 6px,
+    var(--perron-color-surface-brand-hover) 6px 12px
+  );
+  border-color: var(--perron-color-border-brand);
+}
+
+.card-empty {
+  background: none;
+  border-style: dashed;
+  box-shadow: none;
+  animation: none;
+}
+
+@keyframes deal {
+  from {
+    transform: translateY(-0.5rem);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
+
+.hand-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--perron-space-200);
+  align-items: center;
+}
+
+.decision {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: end;
+  gap: var(--perron-space-300);
+  margin-block-end: var(--perron-space-300);
+}
+
+.decision > :first-child {
+  text-transform: capitalize;
+}
+
+.options {
+  display: grid;
+  gap: var(--perron-space-200);
+  margin-block-end: var(--perron-space-200);
+}
+
+.log {
+  margin: 0;
+  padding-inline-start: var(--perron-space-400);
+  display: grid;
+  gap: var(--perron-space-050);
+  font: var(--perron-typography-data-sm);
+  color: var(--perron-color-text-secondary);
+}
+
+.download {
+  font: var(--perron-typography-label-sm);
+  color: var(--perron-color-text-primary);
+}
+
+.history-scroll {
+  overflow-x: auto;
+}
+
+.history {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font: var(--perron-typography-data-sm);
+}
+
+.history th {
+  text-align: start;
+  font: var(--perron-typography-label-sm);
+  color: var(--perron-color-text-secondary);
+}
+
+.history th,
+.history td {
+  padding: var(--perron-space-100) var(--perron-space-200);
+  border-block-end: var(--perron-border-width-025) solid var(--perron-color-border-subtle);
+  white-space: nowrap;
+}
+
+.history .num {
+  text-align: end;
+}

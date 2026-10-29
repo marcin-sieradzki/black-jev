@@ -1,0 +1,33 @@
+{
+  "name": "black-jev",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jev, TypeSafe AI's decision model, playing Blackjack against a simulated dealer while someone watches.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "check": "npm run typecheck && npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "@mylder/perron": "^0.8.0",
+    "@upstash/redis": "^1.40.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
