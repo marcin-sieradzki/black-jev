@@ -59,8 +59,24 @@ export function freshState(startingBankroll: number, now = new Date()): State {
   };
 }
 
-/** Folds a finished round into the state. Pure, so the runner and tests share it. */
-export function applyRound(state: State, result: RoundResult, now = new Date()): State {
+/**
+ * Jev's state at the start of a round: fresh for the very first, and bought back in with the
+ * starting bankroll when it can't cover the bet.
+ */
+export function sitDown(
+  state: State | null | undefined,
+  options: { startingBankroll: number; bet: number; now: Date },
+): { state: State; rebought: boolean } {
+  const seated = state ?? freshState(options.startingBankroll, options.now);
+  if (seated.bankroll >= options.bet) return { state: seated, rebought: false };
+  return {
+    state: { ...seated, bankroll: seated.bankroll + seated.startingBankroll, rebuys: seated.rebuys + 1 },
+    rebought: true,
+  };
+}
+
+/** Folds a finished round into the state, and writes the round's line in the history. */
+export function settleRound(state: State, result: RoundResult, options: { bet: number; now: Date }): { state: State; record: HandRecord } {
   const stats = structuredClone(state.stats);
   stats.hands++;
   for (const hand of result.hands) {
@@ -72,19 +88,19 @@ export function applyRound(state: State, result: RoundResult, now = new Date()):
   stats.peak = Math.max(stats.peak, result.bankrollAfter);
   stats.trough = Math.min(stats.trough, result.bankrollAfter);
   stats.fallbacks += result.decisions.filter((d) => d.decision.fallback).length;
-  return { ...state, bankroll: result.bankrollAfter, stats, updatedAt: now.toISOString() };
-}
-
-export function toRecord(id: number, bet: number, result: RoundResult, now = new Date()): HandRecord {
+  const at = options.now.toISOString();
   return {
-    id,
-    at: now.toISOString(),
-    bet,
-    dealer: result.dealer,
-    hands: result.hands,
-    insurance: result.insurance,
-    decisions: result.decisions,
-    net: result.net,
-    bankroll: result.bankrollAfter,
+    state: { ...state, bankroll: result.bankrollAfter, stats, updatedAt: at },
+    record: {
+      id: stats.hands,
+      at,
+      bet: options.bet,
+      dealer: result.dealer,
+      hands: result.hands,
+      insurance: result.insurance,
+      decisions: result.decisions,
+      net: result.net,
+      bankroll: result.bankrollAfter,
+    },
   };
 }

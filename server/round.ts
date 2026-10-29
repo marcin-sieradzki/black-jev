@@ -3,7 +3,7 @@ import { playRound, type TableEvent } from "../src/engine/game.js";
 import type { Decider } from "../src/engine/jev.js";
 import { money } from "../src/engine/narrate.js";
 import { RULES } from "../src/engine/rules.js";
-import { applyRound, freshState, toRecord, type HandRecord, type State } from "../src/engine/state.js";
+import { settleRound, sitDown, type HandRecord, type State } from "../src/engine/state.js";
 import type { Kv } from "./kv.js";
 
 export const BET = 10;
@@ -63,34 +63,29 @@ export async function nextRound(kv: Kv, decider: Decider, options: { now: number
   const fresh = await kv.get<TableRecord>(KEYS.table);
   if (fresh?.current && now < fresh.current.endsAt) return { current: fresh.current, now };
 
-  let state = fresh?.state ?? freshState(STARTING_BANKROLL, new Date(now));
+  const at = new Date(now);
+  const { state: before, rebought } = sitDown(fresh?.state, { startingBankroll: STARTING_BANKROLL, bet: BET, now: at });
   const shoe = createShoe(RULES.decks, RULES.penetration, Math.random, fresh?.shoe);
   const steps: Step[] = [];
-  if (state.bankroll < BET) {
-    state = { ...state, bankroll: state.bankroll + state.startingBankroll, rebuys: state.rebuys + 1 };
-    steps.push({ type: "note", text: `Jev is broke. Rebuy #${state.rebuys}: bankroll ${money(state.bankroll)}.` });
-  }
+  if (rebought) steps.push({ type: "note", text: `Jev is broke. Rebuy #${before.rebuys}: bankroll ${money(before.bankroll)}.` });
   if (shoe.needsShuffle) {
     shoe.shuffle();
     steps.push({ type: "note", text: `The cut card is out: the dealer shuffles ${RULES.decks} decks.` });
   }
 
-  const before = state;
-  const id = state.stats.hands + 1;
   const result = await playRound({
     shoe,
     jev: decider,
     rules: RULES,
-    bankroll: state.bankroll,
+    bankroll: before.bankroll,
     bet: BET,
     move: (event) => {
       steps.push(event);
     },
   });
-  const after = applyRound(state, result, new Date(now));
-  const record = toRecord(id, BET, result, new Date(now));
+  const { state: after, record } = settleRound(before, result, { bet: BET, now: at });
   const current: CurrentRound = {
-    id,
+    id: record.id,
     steps,
     stepMs,
     startedAt: now,
