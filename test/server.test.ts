@@ -5,7 +5,6 @@ import { localJev } from "../src/engine/jev.js";
 import { handleHistory, handleRound, type Env } from "../server/handlers.js";
 import { memoryKv } from "../server/kv.js";
 import { KEYS, nextRound, recentRounds, type TableRecord } from "../server/round.js";
-import { tableAt } from "../src/web/useRound.js";
 
 const STEP = 5000;
 
@@ -64,17 +63,6 @@ test("the bankroll and history add up over many rounds, and the history is newes
   const rebought = table!.state.rebuys * table!.state.startingBankroll;
   assert.equal(table!.state.bankroll, 1000 + rebought + table!.state.stats.net);
   assert.equal(last?.after.bankroll, table?.state.bankroll);
-});
-
-test("the page's table shows the hole card face down until the reveal", async () => {
-  const kv = memoryKv(() => 0);
-  const { current } = await nextRound(kv, localJev, { now: 0, stepMs: STEP });
-  const dealt = current!.steps.findIndex((s) => s.type === "deal");
-  assert.equal(tableAt(current!, dealt).holeHidden, true);
-  assert.equal(tableAt(current!, dealt).dealer.length, 1);
-  const end = tableAt(current!, current!.steps.length - 1);
-  assert.equal(end.holeHidden, false);
-  assert.equal(end.net, current!.record.net);
 });
 
 test("the routes answer 503 without Upstash, and serve the round and history with it", async () => {

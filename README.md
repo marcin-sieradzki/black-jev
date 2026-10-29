@@ -55,7 +55,8 @@ To start Jev over, delete the `black-jev:table` and `black-jev:history` keys in 
 
 ## Code
 
-- `src/engine/`: the game, with no browser or server in it. `cards.ts` (cards, totals, the shoe), `rules.ts`, `strategy.ts` (basic strategy and the close calls), `jev.ts` (the decider interface, the TypeSafe client and the stand-in), `game.ts` (one round, move by move), `state.ts` (bankroll and running totals), `narrate.ts` (a line per move).
+- `src/engine/`: the game, with no browser or server in it. `cards.ts` (cards, totals, the shoe), `rules.ts`, `strategy.ts` (basic strategy and the close calls), `jev.ts` (the decider interface, the TypeSafe client and the stand-in), `game.ts` (one round, move by move), `state.ts` (the bankroll, rebuys and running totals, round by round), `narrate.ts` (a line per move).
 - `server/`: `round.ts` deals and saves rounds, `kv.ts` is Upstash or Redis in memory, `handlers.ts` turns them into HTTP responses.
 - `api/`: the Vercel functions, one line each over `server/handlers.ts`.
-- `src/web/`: the page. `useRound.ts` follows the table and pauses with the tab, `table.ts` folds moves into what's drawn, `App.tsx` draws it with Perron.
+- `src/web/`: the page. `playback.ts` is what a round shows at any moment on the server's clock, `useRound.ts` follows the table and pauses with the tab, `App.tsx` draws it with Perron.
+- `.claude/skills/`: agent skills for working on the code, such as `improve-codebase-architecture`; `GLOSSARY.md` holds the words they use for the game.

@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { HandRecord } from "../engine/state.js";
 import type { CurrentRound, RoundResponse } from "../../server/round.js";
-import { emptyTable, note, reduceTable, type Table } from "./table.js";
+import { playback, shownHistory } from "./playback.js";
 
 export type Status = "connecting" | "playing" | "waiting" | "paused" | "hidden" | "offline";
 
@@ -18,15 +18,6 @@ async function readError(response: Response): Promise<string> {
     if (body.error) return body.error;
   } catch {}
   return `The table answered ${response.status}.`;
-}
-
-/** The table at step `index` of a round. */
-export function tableAt(round: CurrentRound, index: number): Table {
-  let table = emptyTable;
-  for (const step of round.steps.slice(0, index + 1)) {
-    table = step.type === "note" ? note(table, step.text) : reduceTable(table, step, round.id);
-  }
-  return table;
 }
 
 /**
@@ -78,19 +69,17 @@ export function useRound(paused: boolean) {
     return () => clearInterval(interval);
   }, [following]);
 
-  const index = round ? Math.min(round.steps.length - 1, Math.floor((now + offset - round.startedAt) / round.stepMs)) : -1;
-  const settled = round ? round.steps.slice(0, index + 1).some((step) => step.type === "settle") : false;
-  const table = useMemo(() => (round && index >= 0 ? tableAt(round, index) : emptyTable), [round, index]);
+  const shown = playback(round, now + offset);
 
   // The history list catches up once a round's result is on the table.
-  const historyKey = round ? `${round.id}:${settled}` : "none";
+  const historyKey = round ? `${round.id}:${shown.settled}` : "none";
   useEffect(() => {
     if (!visible) return;
     let cancelled = false;
     fetch("/api/history?limit=20")
       .then((response) => (response.ok ? (response.json() as Promise<HandRecord[]>) : null))
       .then((rounds) => {
-        if (!cancelled && rounds) setHistory(settled || !round ? rounds : rounds.filter((r) => r.id !== round.id));
+        if (!cancelled && rounds) setHistory(rounds);
       })
       .catch(() => {});
     return () => {
@@ -104,21 +93,15 @@ export function useRound(paused: boolean) {
     : paused ? "paused"
     : error ? "offline"
     : !round ? "connecting"
-    : now + offset >= round.endsAt ? "waiting"
+    : shown.ended ? "waiting"
     : "playing";
 
   return {
+    ...shown,
     status,
     error,
     round,
-    table,
-    step: index,
-    /** When the next move shows, on the server's clock, and the time now on that clock. */
-    nextMoveAt: round && index >= 0 ? round.startedAt + (index + 1) * round.stepMs : null,
     serverNow: now + offset,
-    settled,
-    /** Jev's state as the table shows it: the result only counts once it's on the table. */
-    state: round ? (settled ? round.after : round.before) : null,
-    history,
+    history: shownHistory(history, shown),
   };
 }

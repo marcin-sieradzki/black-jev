@@ -4,7 +4,7 @@ import { createShoe, seededRandom } from "../src/engine/cards.js";
 import { playRound } from "../src/engine/game.js";
 import { localJev, type Decider } from "../src/engine/jev.js";
 import { RULES } from "../src/engine/rules.js";
-import { applyRound, freshState } from "../src/engine/state.js";
+import { freshState, settleRound } from "../src/engine/state.js";
 import type { Action } from "../src/engine/strategy.js";
 import { round } from "./helpers.js";
 
@@ -113,7 +113,7 @@ test("over many rounds the books balance and the house edge looks like basic str
     const paid = result.hands.reduce((sum, h) => sum + h.payout, 0) + (result.insurance?.payout ?? 0);
     const staked = result.hands.reduce((sum, h) => sum + h.bet, 0) + (result.insurance?.bet ?? 0);
     assert.equal(result.net, paid - staked);
-    state = applyRound(state, result);
+    state = settleRound(state, result, { bet: 10, now: new Date(0) }).state;
   }
   assert.equal(state.bankroll, 1_000_000 + state.stats.net);
   // About -0.4% of initial bets for this game; 100,000 rounds puts the standard error near 0.36%.
