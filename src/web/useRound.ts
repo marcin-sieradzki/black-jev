@@ -113,6 +113,9 @@ export function useRound(paused: boolean) {
     round,
     table,
     step: index,
+    /** When the next move shows, on the server's clock, and the time now on that clock. */
+    nextMoveAt: round && index >= 0 ? round.startedAt + (index + 1) * round.stepMs : null,
+    serverNow: now + offset,
     settled,
     /** Jev's state as the table shows it: the result only counts once it's on the table. */
     state: round ? (settled ? round.after : round.before) : null,

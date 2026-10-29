@@ -86,6 +86,9 @@ body {
 .felt {
   --card-w: 3.5rem;
   --card-h: 5rem;
+  /* Roughly from a seat to the shoe, where dealt cards start. */
+  --shoe-x: 14rem;
+  --shoe-y: -6rem;
   position: relative;
   inline-size: min(100%, 48rem);
   aspect-ratio: 2 / 1;
@@ -159,7 +162,7 @@ body {
   box-shadow: var(--perron-shadow-panel);
   color: var(--perron-color-text-primary);
   font-family: var(--perron-font-family-data);
-  animation: deal var(--perron-duration-sheet) var(--perron-easing-standard);
+  animation: deal var(--perron-duration-sheet) var(--perron-easing-standard) both;
 }
 
 .card-red {
@@ -194,15 +197,124 @@ body {
   animation: none;
 }
 
+/* Cards slide out of the shoe at the top right of the table, turning straight as they land. */
 @keyframes deal {
   from {
-    transform: translateY(-0.5rem);
+    transform: translate(var(--shoe-x), var(--shoe-y)) rotate(18deg) scale(0.85);
     opacity: 0;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* The hole card turns over where it lies. */
+.card-flip {
+  animation-name: flip;
+}
+
+@keyframes flip {
+  from {
+    transform: perspective(40rem) rotateY(90deg);
+  }
+}
+
+/* The shoe the dealer deals from, on the straight edge at the top right. */
+.shoe {
+  position: absolute;
+  inset-block-start: var(--perron-space-200);
+  inset-inline-end: 9%;
+  inline-size: calc(var(--card-w) * 1.1);
+  block-size: calc(var(--card-h) * 0.55);
+  border-radius: var(--perron-radius-sm) var(--perron-radius-sm) var(--perron-radius-md) var(--perron-radius-md);
+  background: repeating-linear-gradient(
+    90deg,
+    var(--perron-color-surface-brand) 0 3px,
+    var(--perron-color-surface-brand-hover) 3px 5px
+  );
+  border: var(--perron-border-width-025) solid var(--perron-color-border-brand);
+  box-shadow: var(--perron-shadow-panel);
+  transform: rotate(-8deg);
+}
+
+/* A hand's result lies across its cards, so the table doesn't grow when it appears. */
+.result {
+  position: absolute;
+  inset-block-start: calc(var(--perron-space-150) + var(--card-h) * 0.5);
+  inset-inline: 0;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* A result or a new call arrives with a small bounce. */
+.pop {
+  display: inline-flex;
+  animation: pop var(--perron-duration-sheet) var(--perron-easing-standard) both;
+}
+
+@keyframes pop {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+/* The hand Jev is thinking about breathes. */
+.seat[data-active] {
+  animation: thinking 1.6s ease-in-out infinite;
+}
+
+@keyframes thinking {
+  50% {
+    box-shadow: 0 0 0 var(--perron-space-050) var(--perron-color-surface-brand-subtle);
+  }
+}
+
+.log li {
+  animation: pop var(--perron-duration-sheet) var(--perron-easing-standard) both;
+}
+
+/* Time to the next move: a thin bar that empties, beside the seconds left. */
+.next-move {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--perron-space-100);
+}
+
+.next-move-track {
+  inline-size: 3rem;
+  block-size: var(--perron-border-width-050);
+  border-radius: var(--perron-radius-full);
+  background: var(--perron-color-border-subtle);
+  overflow: hidden;
+}
+
+.next-move-bar {
+  display: block;
+  block-size: 100%;
+  background: var(--perron-color-text-secondary);
+  transform-origin: left;
+  animation: drain linear both;
+}
+
+@keyframes drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card {
+  .card,
+  .pop,
+  .seat[data-active],
+  .log li {
     animation: none;
   }
 }
@@ -218,6 +330,8 @@ body {
   .felt {
     --card-w: 2.75rem;
     --card-h: 4rem;
+    --shoe-x: 6rem;
+    --shoe-y: -4rem;
     aspect-ratio: auto;
     min-block-size: 20rem;
     padding-inline: 8%;

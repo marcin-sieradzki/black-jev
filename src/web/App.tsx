@@ -16,10 +16,15 @@ function Icon({ svg }: { svg: string }) {
 
 const RED = new Set(["♥", "♦"]);
 
-function PlayingCard({ card }: { card: Card | null }) {
+/** A card. It slides in from the shoe when dealt; `flip` turns it over instead, for the hole card. */
+function PlayingCard({ card, flip = false }: { card: Card | null; flip?: boolean }) {
   if (!card) return <span className="card card-back" role="img" aria-label="Face-down card" />;
   return (
-    <span className={`card${RED.has(card.suit) ? " card-red" : ""}`} role="img" aria-label={`${card.rank}${card.suit}`}>
+    <span
+      className={`card${RED.has(card.suit) ? " card-red" : ""}${flip ? " card-flip" : ""}`}
+      role="img"
+      aria-label={`${card.rank}${card.suit}`}
+    >
       <span className="card-rank">{card.rank}</span>
       <span className="card-suit">{card.suit}</span>
     </span>
@@ -67,12 +72,20 @@ function TableView({ table }: { table: Table }) {
     <div className="felt" data-hands={table.hands.length || 1}>
       <div className="seat seat-dealer">
         <div className="cards">
-          {dealerCards.length ? dealerCards.map((card, i) => <PlayingCard key={i} card={card} />) : <span className="card card-empty" />}
+          {dealerCards.length ? (
+            dealerCards.map((card, i) =>
+              // The hole card gets a new key when it's turned over, so it flips rather than sliding in.
+              i === 1 ? <PlayingCard key={card ? "hole-up" : "hole-down"} card={card} flip /> : <PlayingCard key={i} card={card} />,
+            )
+          ) : (
+            <span className="card card-empty" />
+          )}
         </div>
         <Text variant="overline" emphasis="secondary">
           Dealer {dealerTotal ? `· ${dealerTotal}` : ""}
         </Text>
       </div>
+      <span className="shoe" aria-hidden="true" />
       <FeltPrint />
       <div className="hands">
         {table.hands.length === 0 && (
@@ -80,9 +93,14 @@ function TableView({ table }: { table: Table }) {
             <div className="cards">
               <span className="card card-empty" />
             </div>
-            <Text variant="overline" emphasis="secondary">
-              Jev
-            </Text>
+            <div className="hand-meta">
+              <Text variant="overline" emphasis="secondary">
+                Jev
+              </Text>
+              <Text variant="data" emphasis="tertiary">
+                —
+              </Text>
+            </div>
           </div>
         )}
         {table.hands.map((hand, i) => {
@@ -107,15 +125,40 @@ function TableView({ table }: { table: Table }) {
                 </Text>
               </div>
               {outcome && (
-                <Tag color={outcome.color}>
-                  {outcome.label} {signed(hand.net ?? 0)}
-                </Tag>
+                <span className="result pop">
+                  <Tag color={outcome.color}>
+                    {outcome.label} {signed(hand.net ?? 0)}
+                  </Tag>
+                </span>
               )}
             </div>
           );
         })}
       </div>
     </div>
+  );
+}
+
+/** A small countdown to the next move: the seconds left and a bar that empties until it comes. */
+function NextMove({ status, step, nextMoveAt, serverNow }: { status: Status; step: number; nextMoveAt: number | null; serverNow: number }) {
+  const left = nextMoveAt === null ? null : Math.max(0, nextMoveAt - serverNow);
+  const running = status === "playing" && left !== null;
+  const label =
+    status === "paused" || status === "hidden" ? "Paused"
+    : status === "playing" && left !== null ? `Next move in ${Math.ceil(left / 1000)} s`
+    : "Dealing";
+  return (
+    <span className="next-move" role="timer" aria-live="off">
+      <span className="next-move-track" aria-hidden="true">
+        {running && (
+          // A new key per move restarts the bar; it runs for what's left of this move.
+          <span key={step} className="next-move-bar" style={{ animationDuration: `${left}ms` }} />
+        )}
+      </span>
+      <Text variant="data-sm" emphasis="secondary">
+        {label}
+      </Text>
+    </span>
   );
 }
 
@@ -140,7 +183,9 @@ function DecisionView({ table }: { table: Table }) {
       }
     >
       <div className="decision">
-        <Text variant="data-xl">{decision.choice}</Text>
+        <span key={`${call.kind}-${call.hand}-${table.hands[call.hand]?.cards.length ?? 0}`} className="pop">
+          <Text variant="data-xl">{decision.choice}</Text>
+        </span>
         <Stat label="Confidence">{decision.confidence.toFixed(2)}</Stat>
       </div>
       <div className="options">
@@ -248,7 +293,7 @@ function HistoryView({ history }: { history: HandRecord[] }) {
 
 export function App() {
   const [paused, setPaused] = useState(false);
-  const { status, error, round, table, step, state, history } = useRound(paused);
+  const { status, error, round, table, step, state, history, nextMoveAt, serverNow } = useRound(paused);
   const badge = STATUS[status];
 
   return (
@@ -296,6 +341,7 @@ export function App() {
               move {Math.max(step + 1, 1)} of {round.steps.length}
             </Text>
           )}
+          <NextMove status={status} step={step} nextMoveAt={nextMoveAt} serverNow={serverNow} />
         </div>
         <TableView table={table} />
       </div>

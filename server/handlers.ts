@@ -15,7 +15,7 @@ export function envFromProcess(env: Record<string, string | undefined> = process
   return {
     kv: upstashKv(env),
     decider: key ? typeSafeJev({ apiKey: key, url: env.TYPESAFE_API_URL, model: env.JEV_MODEL }) : localJev,
-    stepMs: Number(env.STEP_MS) || 5000,
+    stepMs: Number(env.STEP_MS) || 3000,
     now: Date.now,
   };
 }
